@@ -1,0 +1,16 @@
+LightBulbTrigger 設定好 wifi
+CameraWebServer 設定好 wifi
+
+# 電燈泡
+LightBulbTrigger 先跑起來，並查看 IP
+CameraWebServer 的 LightBulbManager.h 更改 SERVER_IP 為 LightBulbTrigger 的 IP
+
+
+# CameraWebServer 新增按鈕
+在 index.html 新增按鈕
+在 CmdHandler.cpp 新增對應行為
+在 StatusHandler.cpp 設置初始化數值
+
+
+
+
