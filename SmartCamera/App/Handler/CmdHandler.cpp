@@ -60,12 +60,27 @@ esp_err_t CmdHandler::handler(httpd_req_t *req) {
     } else if (!strcmp(variable, "colorbar")) {
         res = s->set_colorbar(s, val);
     } else if (!strcmp(variable, "camera_open")) {
-        StatusHandler::camera_open = val;
-        if(val)
-            CameraMgr->start();
-        else
-            CameraMgr->stop();
-        res = 1;
+        bool success = false;
+        if(val) {
+            Serial.println("Attempting to start camera...");
+            success = CameraMgr->start();
+            if (!success) {
+                Serial.println("Camera start failed, attempting restart...");
+                success = CameraMgr->restart();
+            }
+        } else {
+            Serial.println("Attempting to stop camera...");
+            success = CameraMgr->stop();
+        }
+        
+        // 只有在操作成功時才更新狀態
+        if (success) {
+            StatusHandler::camera_open = val;
+            res = 1;
+        } else {
+            Serial.printf("Camera operation failed (open=%d)\n", val);
+            res = 0; // 操作失敗
+        }
     }
     else if (!strcmp(variable, "light_bulb")) {
         StatusHandler::light_bulb = val;
