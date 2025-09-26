@@ -37,12 +37,22 @@ esp_err_t CmdHandler::handler(httpd_req_t *req) {
     }
     free(buf);
 
-    int val = atoi(value);
+    // 處理布林值和數字值
+    int val = 0;
+    if (strcmp(value, "true") == 0 || strcmp(value, "1") == 0) {
+        val = 1;
+    } else if (strcmp(value, "false") == 0 || strcmp(value, "0") == 0) {
+        val = 0;
+    } else {
+        // 嘗試解析為數字
+        val = atoi(value);
+    }
+    
     log_i("%s = %d", variable, val);
     sensor_t *s = esp_camera_sensor_get();
     int res = 0;
 
-    printf("variable: %s | value: %d\n", variable, val);
+    printf("variable: %s | value: %d (original: %s)\n", variable, val, value);
     if (!strcmp(variable, "framesize")) {
         if (s->pixformat == PIXFORMAT_JPEG) {
         res = s->set_framesize(s, (framesize_t)val);
