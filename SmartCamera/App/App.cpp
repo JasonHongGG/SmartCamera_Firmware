@@ -23,7 +23,6 @@
 #include "Handler/PllHandler.cpp"
 #include "Handler/StreamHandler.cpp"
 #include "Handler/WindowHandler.cpp"
-#include "Handler/HealthHandler.cpp"
 
 
 class App {
@@ -63,7 +62,6 @@ void App::startCameraServer() {
     GregHandler::registerHandler(camera_httpd);
     PllHandler::registerHandler(camera_httpd);
     WindowHandler::registerHandler(camera_httpd);
-    HealthHandler::registerHandler(camera_httpd);
   }
 
   config.server_port += 1;
