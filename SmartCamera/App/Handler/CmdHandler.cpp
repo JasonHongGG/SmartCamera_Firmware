@@ -48,28 +48,14 @@ esp_err_t CmdHandler::handler(httpd_req_t *req) {
         val = atoi(value);
     }
     
-    log_i("%s = %d", variable, val);
+    
     sensor_t *s = esp_camera_sensor_get();
     int res = 0;
 
+    log_i("%s = %d", variable, val);
     printf("variable: %s | value: %d (original: %s)\n", variable, val, value);
-    if (!strcmp(variable, "framesize")) {
-        if (s->pixformat == PIXFORMAT_JPEG) {
-        res = s->set_framesize(s, (framesize_t)val);
-        }
-    } else if (!strcmp(variable, "quality")) {
-        res = s->set_quality(s, val);
-    } else if (!strcmp(variable, "contrast")) {
-        res = s->set_contrast(s, val);
-    } else if (!strcmp(variable, "brightness")) {
-        res = s->set_brightness(s, val);
-    } else if (!strcmp(variable, "saturation")) {
-        res = s->set_saturation(s, val);
-    } else if (!strcmp(variable, "gainceiling")) {
-        res = s->set_gainceiling(s, (gainceiling_t)val);
-    } else if (!strcmp(variable, "colorbar")) {
-        res = s->set_colorbar(s, val);
-    } else if (!strcmp(variable, "camera_open")) {
+    
+    if (!strcmp(variable, "camera_open")) {
         bool success = false;
         if(val) {
             Serial.println("Attempting to start camera...");
@@ -100,7 +86,32 @@ esp_err_t CmdHandler::handler(httpd_req_t *req) {
             LightBulbMgr->open(false);
         res = 1;
     }
-    else if (!strcmp(variable, "awb")) {
+
+    // 檢查相機感應器是否可用
+    if (s == NULL && strcmp(variable, "camera_open") != 0 && strcmp(variable, "light_bulb") != 0) {
+        printf("Camera sensor not available, operation skipped: %s\n", variable);
+        httpd_resp_set_type(req, "application/json");
+        httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+        return httpd_resp_send(req, "{\"error\":\"Camera not initialized\"}", HTTPD_RESP_USE_STRLEN);
+    }
+    
+    if (!strcmp(variable, "framesize")) {
+        if (s->pixformat == PIXFORMAT_JPEG) {
+        res = s->set_framesize(s, (framesize_t)val);
+        }
+    } else if (!strcmp(variable, "quality")) {
+        res = s->set_quality(s, val);
+    } else if (!strcmp(variable, "contrast")) {
+        res = s->set_contrast(s, val);
+    } else if (!strcmp(variable, "brightness")) {
+        res = s->set_brightness(s, val);
+    } else if (!strcmp(variable, "saturation")) {
+        res = s->set_saturation(s, val);
+    } else if (!strcmp(variable, "gainceiling")) {
+        res = s->set_gainceiling(s, (gainceiling_t)val);
+    } else if (!strcmp(variable, "colorbar")) {
+        res = s->set_colorbar(s, val);
+    } else if (!strcmp(variable, "awb")) {
         res = s->set_whitebal(s, val);
     } else if (!strcmp(variable, "agc")) {
         res = s->set_gain_ctrl(s, val);
