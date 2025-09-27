@@ -36,7 +36,7 @@ esp_err_t StatusHandler::handler(httpd_req_t *req) {
     p += sprintf(p, "\"light_bulb\":%u,", LightBulbMgr->light_bulb);
     p += sprintf(p, "\"led_intensity\":%u,", FlashLightManager::led_duty);
 
-    if (s == NULL) {
+    if (s != NULL) {
         if (s->id.PID == OV2640_PID) {
             p += print_reg(p, s, 0xd3, 0xFF);
             p += print_reg(p, s, 0x111, 0xFF);
