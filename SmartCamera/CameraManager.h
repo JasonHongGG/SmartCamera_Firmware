@@ -5,6 +5,9 @@
 
 class CameraManager {
 public:
+    bool camera_open = true;
+
+public:
     CameraManager();
     ~CameraManager();
 

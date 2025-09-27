@@ -85,7 +85,7 @@ esp_err_t CmdHandler::handler(httpd_req_t *req) {
         
         // 只有在操作成功時才更新狀態
         if (success) {
-            StatusHandler::camera_open = val;
+            CameraMgr->camera_open = val;
             res = 1;
         } else {
             Serial.printf("Camera operation failed (open=%d)\n", val);
@@ -93,7 +93,7 @@ esp_err_t CmdHandler::handler(httpd_req_t *req) {
         }
     }
     else if (!strcmp(variable, "light_bulb")) {
-        StatusHandler::light_bulb = val;
+        LightBulbMgr->light_bulb = val;
         if(val)
             LightBulbMgr->open(true);
         else

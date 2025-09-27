@@ -1,5 +1,6 @@
 #include "../HttpManager.cpp"
 #include "../../FlashLightManager.h"
+#include "../../CameraManager.h"
 #define PART_BOUNDARY "123456789000000000000987654321"
 
 class StreamHandler {
@@ -51,10 +52,18 @@ esp_err_t StreamHandler::handler(httpd_req_t *req) {
     FlashLightManager::openFlashLight(true);
 
     while (true) {
+        // 檢查相機是否仍然可用
+        if (!CameraMgr->isInitialized()) {
+            log_i("Camera not initialized, stopping stream");
+            res = ESP_FAIL;
+            break;
+        }
+        
         fb = esp_camera_fb_get();
         if (!fb) {
-        log_e("Camera capture failed");
-        res = ESP_FAIL;
+            log_e("Camera capture failed");
+            res = ESP_FAIL;
+            break; // 退出循環而不是繼續嘗試
         } else {
         _timestamp.tv_sec = fb->timestamp.tv_sec;
         _timestamp.tv_usec = fb->timestamp.tv_usec;

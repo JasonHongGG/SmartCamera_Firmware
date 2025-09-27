@@ -1,10 +1,9 @@
 #pragma once
 #include "../HttpManager.cpp"
+#include "../../CameraManager.h"
+#include "../../LightBulbManager.h"
 
 class StatusHandler {
-public:
-    static bool camera_open;
-    static bool light_bulb;
 public:
     static int print_reg(char *p, sensor_t *s, uint16_t reg, uint32_t mask);
 
@@ -21,9 +20,6 @@ public:
         httpd_register_uri_handler(camera_httpd, &status_uri);
     }
 };
-
-bool StatusHandler::camera_open = true;
-bool StatusHandler::light_bulb = false;
 
 int StatusHandler::print_reg(char *p, sensor_t *s, uint16_t reg, uint32_t mask) {
   return sprintf(p, "\"0x%x\":%u,", reg, s->get_reg(s, reg, mask));
@@ -42,8 +38,8 @@ esp_err_t StatusHandler::handler(httpd_req_t *req) {
         p += print_reg(p, s, 0x132, 0xFF);
     }
 
-    p += sprintf(p, "\"camera_open\":%u,", camera_open);
-    p += sprintf(p, "\"light_bulb\":%u,", light_bulb);
+    p += sprintf(p, "\"camera_open\":%u,", CameraMgr->camera_open);
+    p += sprintf(p, "\"light_bulb\":%u,", LightBulbMgr->light_bulb);
     p += sprintf(p, "\"xclk\":%u,", s->xclk_freq_hz / 1000000);
     p += sprintf(p, "\"pixformat\":%u,", s->pixformat);
     p += sprintf(p, "\"framesize\":%u,", s->status.framesize);

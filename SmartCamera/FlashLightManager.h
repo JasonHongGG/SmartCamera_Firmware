@@ -9,4 +9,7 @@ public:
     static bool isStreaming;
     static void setup();
     static void openFlashLight(bool on);
+    
+private:
+    static int lastDuty; // 記錄上次的亮度值
 };
