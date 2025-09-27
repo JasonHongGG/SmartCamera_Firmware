@@ -34,7 +34,7 @@ esp_err_t StatusHandler::handler(httpd_req_t *req) {
 
     p += sprintf(p, "\"camera_open\":%u,", CameraMgr->camera_open);
     p += sprintf(p, "\"light_bulb\":%u,", LightBulbMgr->light_bulb);
-    p += sprintf(p, ",\"led_intensity\":%u", FlashLightManager::led_duty);
+    p += sprintf(p, "\"led_intensity\":%u,", FlashLightManager::led_duty);
 
     if (s == NULL) {
         if (s->id.PID == OV2640_PID) {
@@ -68,9 +68,10 @@ esp_err_t StatusHandler::handler(httpd_req_t *req) {
         p += sprintf(p, "\"lenc\":%u,", s->status.lenc);
         p += sprintf(p, "\"hmirror\":%u,", s->status.hmirror);
         p += sprintf(p, "\"dcw\":%u,", s->status.dcw);
-        p += sprintf(p, "\"colorbar\":%u", s->status.colorbar);
+        p += sprintf(p, "\"colorbar\":%u,", s->status.colorbar);
     }
     
+    p += sprintf(p, "\"end\":%u", true);
     *p++ = '}';
     *p++ = 0;
     httpd_resp_set_type(req, "application/json");
