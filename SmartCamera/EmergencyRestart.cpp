@@ -1,4 +1,5 @@
 #include "EmergencyRestart.h"
+#include <WiFi.h>
 
 unsigned long EmergencyRestart::lastHealthCheck = 0;
 int EmergencyRestart::criticalErrorCount = 0;

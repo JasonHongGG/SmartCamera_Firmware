@@ -6,6 +6,7 @@
 #include "WatchdogManager.h"
 #include "HttpHealthMonitor.h"
 #include "EmergencyRestart.h"
+#include "EmergencyRestart.h"
 
 
 
