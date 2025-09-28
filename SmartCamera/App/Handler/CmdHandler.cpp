@@ -1,8 +1,9 @@
 #include <Arduino.h>
 #include "../HttpManager.cpp"
 #include "../../FlashLightManager.h"
-#include "../../CameraManager.h"
+#include "../../CameraManager.h" 
 #include "../../LightBulbManager.h"
+#include "../../HttpHealthMonitor.h"
 
 #include "StatusHandler.cpp"
 
@@ -54,8 +55,6 @@ esp_err_t CmdHandler::handler(httpd_req_t *req) {
     log_i("%s = %d", variable, val);
     printf("variable: %s | value: %d (original: %s)\n", variable, val, value);
     
-
-    
     if (!strcmp(variable, "camera_open")) {
         bool success = false;
         if(val) {
@@ -88,61 +87,74 @@ esp_err_t CmdHandler::handler(httpd_req_t *req) {
         res = 1;
     }
 
-    // 相機設定操作（需要 sensor）
+    // 檢查相機感應器是否可用
+    else if (s == NULL) {
+        printf("Camera sensor not available, operation skipped: %s\n", variable);
+    }
+
+    // 不是 camera_open、light_bulb 且 s != NULL，則更新相機參數
     else if (!strcmp(variable, "framesize")) {
         if (s != NULL && s->pixformat == PIXFORMAT_JPEG) {
+            // 檢查是否設置了過大的 framesize，可能導致 DMA overflow
+            if (val > 11) { // SXGA (11) 是大多數 ESP32-CAM 的安全上限
+                if (!psramFound()) {
+                    printf("Warning: Large framesize (%d) without PSRAM may cause DMA overflow\n", val);
+                    val = 10; // 降級到 XGA
+                }
+            }
             res = s->set_framesize(s, (framesize_t)val);
+            if (res != 0) {
+                printf("Framesize setting failed, possible DMA overflow. Trying smaller size.\n");
+                // 如果失敗，嘗試更小的尺寸
+                res = s->set_framesize(s, FRAMESIZE_XGA);
+            }
         }
     } else if (!strcmp(variable, "quality")) {
-        if (s != NULL) {
-            res = s->set_quality(s, val);
-        }
+        res = s->set_quality(s, val);
     } else if (!strcmp(variable, "contrast")) {
-        if (s != NULL) {
-            res = s->set_contrast(s, val);
-        }
+        res = s->set_contrast(s, val);
     } else if (!strcmp(variable, "brightness")) {
-        if (s != NULL) res = s->set_brightness(s, val);
+        res = s->set_brightness(s, val);
     } else if (!strcmp(variable, "saturation")) {
-        if (s != NULL) res = s->set_saturation(s, val);
+        res = s->set_saturation(s, val);
     } else if (!strcmp(variable, "gainceiling")) {
-        if (s != NULL) res = s->set_gainceiling(s, (gainceiling_t)val);
+        res = s->set_gainceiling(s, (gainceiling_t)val);
     } else if (!strcmp(variable, "colorbar")) {
-        if (s != NULL) res = s->set_colorbar(s, val);
+        res = s->set_colorbar(s, val);
     } else if (!strcmp(variable, "awb")) {
-        if (s != NULL) res = s->set_whitebal(s, val);
+        res = s->set_whitebal(s, val);
     } else if (!strcmp(variable, "agc")) {
-        if (s != NULL) res = s->set_gain_ctrl(s, val);
+        res = s->set_gain_ctrl(s, val);
     } else if (!strcmp(variable, "aec")) {
-        if (s != NULL) res = s->set_exposure_ctrl(s, val);
+        res = s->set_exposure_ctrl(s, val);
     } else if (!strcmp(variable, "hmirror")) {
-        if (s != NULL) res = s->set_hmirror(s, val);
+        res = s->set_hmirror(s, val);
     } else if (!strcmp(variable, "vflip")) {
-        if (s != NULL) res = s->set_vflip(s, val);
+        res = s->set_vflip(s, val);
     } else if (!strcmp(variable, "awb_gain")) {
-        if (s != NULL) res = s->set_awb_gain(s, val);
+        res = s->set_awb_gain(s, val);
     } else if (!strcmp(variable, "agc_gain")) {
-        if (s != NULL) res = s->set_agc_gain(s, val);
+        res = s->set_agc_gain(s, val);
     } else if (!strcmp(variable, "aec_value")) {
-        if (s != NULL) res = s->set_aec_value(s, val);
+        res = s->set_aec_value(s, val);
     } else if (!strcmp(variable, "aec2")) {
-        if (s != NULL) res = s->set_aec2(s, val);
+        res = s->set_aec2(s, val);
     } else if (!strcmp(variable, "dcw")) {
-        if (s != NULL) res = s->set_dcw(s, val);
+        res = s->set_dcw(s, val);
     } else if (!strcmp(variable, "bpc")) {
-        if (s != NULL) res = s->set_bpc(s, val);
+        res = s->set_bpc(s, val);
     } else if (!strcmp(variable, "wpc")) {
-        if (s != NULL) res = s->set_wpc(s, val);
+        res = s->set_wpc(s, val);
     } else if (!strcmp(variable, "raw_gma")) {
-        if (s != NULL) res = s->set_raw_gma(s, val);
+        res = s->set_raw_gma(s, val);
     } else if (!strcmp(variable, "lenc")) {
-        if (s != NULL) res = s->set_lenc(s, val);
+        res = s->set_lenc(s, val);
     } else if (!strcmp(variable, "special_effect")) {
-        if (s != NULL) res = s->set_special_effect(s, val);
+        res = s->set_special_effect(s, val);
     } else if (!strcmp(variable, "wb_mode")) {
-        if (s != NULL) res = s->set_wb_mode(s, val);
+        res = s->set_wb_mode(s, val);
     } else if (!strcmp(variable, "ae_level")) {
-        if (s != NULL) res = s->set_ae_level(s, val);
+        res = s->set_ae_level(s, val);
     }
     else if (!strcmp(variable, "led_intensity")) {
         FlashLightManager::led_duty = val;
@@ -155,10 +167,23 @@ esp_err_t CmdHandler::handler(httpd_req_t *req) {
         res = -1;
     }
 
+    esp_err_t result;
     if (res < 0) {
-        return httpd_resp_send_500(req);
+        result = httpd_resp_send_500(req);
+        if (result != ESP_OK) {
+            HttpHealthMonitor::recordError("CmdHandler", result);
+        }
+        return result;
     }
 
     httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
-    return httpd_resp_send(req, NULL, 0);
+    result = httpd_resp_send(req, NULL, 0);
+    
+    if (result == ESP_OK) {
+        HttpHealthMonitor::recordSuccess("CmdHandler");
+    } else {
+        HttpHealthMonitor::recordError("CmdHandler", result);
+    }
+    
+    return result;
 }

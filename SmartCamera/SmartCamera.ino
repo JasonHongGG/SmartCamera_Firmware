@@ -4,6 +4,8 @@
 #include "CameraManager.h"
 #include "FlashLightManager.h"
 #include "WatchdogManager.h"
+#include "HttpHealthMonitor.h"
+#include "EmergencyRestart.h"
 
 
 
@@ -14,6 +16,9 @@ void setup() {
   Serial.println();
   // 啟動看門狗
   WatchdogManager::setup();
+  
+  // 啟動緊急重啟系統
+  EmergencyRestart::setup();
   
   FlashLightManager::setup();
   
@@ -36,5 +41,20 @@ void loop() {
   
   // 檢查 WiFi 連接
   WiFiMgr->checkWiFiConnection();
+  
+  // 檢查 HTTP 服務器健康狀態
+  app->checkServerHealth();
+  
+  // 檢查緊急重啟條件
+  EmergencyRestart::checkSystemHealth();
+  
+  // 如果相機未初始化，嘗試重新啟動
+  static unsigned long lastCameraRetry = 0;
+  if (!CameraMgr->isInitialized() && (millis() - lastCameraRetry > 10000)) {
+    lastCameraRetry = millis();
+    Serial.println("Camera not initialized, attempting restart...");
+    CameraMgr->start();
+  }
+  
   delay(1000);
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "../HttpManager.cpp"
+#include "../../HttpHealthMonitor.h"
 
 class TestConnectionHandler {
 public:
@@ -51,5 +52,13 @@ esp_err_t TestConnectionHandler::handler(httpd_req_t *req) {
     httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
     
     // 發送響應
-    return httpd_resp_send(req, json_response, HTTPD_RESP_USE_STRLEN);
+    esp_err_t result = httpd_resp_send(req, json_response, HTTPD_RESP_USE_STRLEN);
+    
+    if (result == ESP_OK) {
+        HttpHealthMonitor::recordSuccess("TestConnectionHandler");
+    } else {
+        HttpHealthMonitor::recordError("TestConnectionHandler", result);
+    }
+    
+    return result;
 }
