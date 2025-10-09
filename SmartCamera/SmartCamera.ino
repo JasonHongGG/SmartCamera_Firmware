@@ -49,11 +49,11 @@ void loop() {
   // 檢查緊急重啟條件
   EmergencyRestart::checkSystemHealth();
   
-  // 如果相機未初始化，嘗試重新啟動
+  // 如果相機未初始化且 camera_open 為 true，嘗試重新啟動
   static unsigned long lastCameraRetry = 0;
-  if (!CameraMgr->isInitialized() && (millis() - lastCameraRetry > 10000)) {
+  if (!CameraMgr->isInitialized() && CameraMgr->camera_open && (millis() - lastCameraRetry > 10000)) {
     lastCameraRetry = millis();
-    Serial.println("Camera not initialized, attempting restart...");
+    Serial.println("Camera not initialized but should be open, attempting restart...");
     CameraMgr->start();
   }
   

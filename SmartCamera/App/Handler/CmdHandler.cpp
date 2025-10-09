@@ -56,6 +56,9 @@ esp_err_t CmdHandler::handler(httpd_req_t *req) {
     printf("variable: %s | value: %d (original: %s)\n", variable, val, value);
     
     if (!strcmp(variable, "camera_open")) {
+        // 先更新狀態，這樣其他函數可以讀取正確的狀態
+        CameraMgr->camera_open = val;
+        
         bool success = false;
         if(val) {
             Serial.println("Attempting to start camera...");
@@ -69,13 +72,13 @@ esp_err_t CmdHandler::handler(httpd_req_t *req) {
             success = CameraMgr->stop();
         }
         
-        // 只有在操作成功時才更新狀態
         if (success) {
-            CameraMgr->camera_open = val;
             res = 1;
         } else {
             Serial.printf("Camera operation failed (open=%d)\n", val);
-            res = 0; // 操作失敗
+            // 操作失敗時，恢復原狀態
+            CameraMgr->camera_open = !val;
+            res = 0;
         }
     }
     else if (!strcmp(variable, "light_bulb")) {

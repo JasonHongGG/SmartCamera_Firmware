@@ -49,6 +49,13 @@ CameraManager::CameraManager() {
 
 bool CameraManager::start() {
     Serial.println("CameraManager::start");
+    
+    // 檢查 camera_open 狀態，如果為 false 則不啟動
+    if (!this->camera_open) {
+        Serial.println("Camera is set to closed (camera_open=false), skipping start");
+        return false;
+    }
+    
     if (this->cameraInitialized) {
         Serial.println("Camera already initialized");
         // 執行健康檢查
@@ -169,6 +176,14 @@ bool CameraManager::stop() {
 
 bool CameraManager::restart() {
     Serial.println("CameraManager::restart");
+    
+    // 檢查 camera_open 狀態
+    if (!this->camera_open) {
+        Serial.println("Camera is set to closed (camera_open=false), skipping restart");
+        stop();
+        return false;
+    }
+    
     stop();
     delay(100); // 等待完全停止
     return start();
