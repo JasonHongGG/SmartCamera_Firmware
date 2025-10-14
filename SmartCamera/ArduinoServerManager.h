@@ -4,6 +4,10 @@
 #include <ArduinoIoTCloud.h>
 #include <Arduino_ConnectionHandler.h>
 
+// 前向聲明
+class ArduinoServerManager;
+extern ArduinoServerManager *ArduinoServerMgr;
+
 class ArduinoServerManager {
 public:
     CloudSwitch lightSwitch;
