@@ -34,6 +34,9 @@ void setup() {
   WiFiMgr->wifiSetup();
   app->setup();
   
+  // 初始化 Arduino IoT Cloud（必須在 WiFi 連接之後）
+  ArduinoServerMgr->begin();
+  
   Serial.println("=== System initialization completed ===");
 }
 

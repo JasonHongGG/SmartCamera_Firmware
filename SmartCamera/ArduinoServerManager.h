@@ -13,24 +13,40 @@ public:
     CloudSwitch lightSwitch;
     static constexpr const char* DEVICE_KEY = "xYv9#1xW13lrSMjrrVVjIl90K";
     static constexpr const char* DEVICE_LOGIN_NAME = "4e2a1e1b-e0c8-40b3-a902-53f1dae42818";
+    
+private:
+    WiFiConnectionHandler* connectionHandler = nullptr;
+    
 public:
 
     ArduinoServerManager() {
-        WiFiConnectionHandler ArduinoIoTPreferredConnection(WiFiMgr->ssid, WiFiMgr->password);
+        // 不在建構函數中初始化，避免生命週期問題
+    }
+    
+    void begin() {
+        // 確保 WiFi 已經連接
+        if (WiFi.status() != WL_CONNECTED) {
+            Serial.println("WiFi not connected, skipping Arduino IoT Cloud setup");
+            return;
+        }
+        connectionHandler = new WiFiConnectionHandler(WiFiMgr->ssid, WiFiMgr->password);
         initProperties();
-        ArduinoCloud.begin(ArduinoIoTPreferredConnection);
+        ArduinoCloud.begin(*connectionHandler);
         ArduinoCloud.printDebugInfo();
+        
+        Serial.println("Arduino IoT Cloud initialized");
     }
 
     void initProperties(){
-
         ArduinoCloud.setBoardId(DEVICE_LOGIN_NAME);
         ArduinoCloud.setSecretDeviceKey(DEVICE_KEY);
         ArduinoCloud.addProperty(lightSwitch, READWRITE, ON_CHANGE, onLightSwitchChangeStatic);
     }
 
     void update(){
-        ArduinoCloud.update();
+        if (connectionHandler != nullptr) {
+            ArduinoCloud.update();
+        }
     }
     
     static void onLightSwitchChangeStatic()
