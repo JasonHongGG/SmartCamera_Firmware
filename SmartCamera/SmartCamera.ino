@@ -7,6 +7,7 @@
 #include "HttpHealthMonitor.h"
 #include "EmergencyRestart.h"
 #include "EmergencyRestart.h"
+#include "ArduinoServerManager.h"
 
 
 
@@ -56,6 +57,8 @@ void loop() {
     Serial.println("Camera not initialized but should be open, attempting restart...");
     CameraMgr->start();
   }
+
+  ArduinoServerMgr->update();
   
   delay(1000);
 }

@@ -82,7 +82,6 @@ esp_err_t CmdHandler::handler(httpd_req_t *req) {
         }
     }
     else if (!strcmp(variable, "light_bulb")) {
-        LightBulbMgr->light_bulb = val;
         if(val)
             LightBulbMgr->open(true);
         else

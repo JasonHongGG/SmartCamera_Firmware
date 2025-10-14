@@ -7,7 +7,7 @@ void LightBulbManager::open(bool on) {
     http.addHeader("Content-Type", "application/json");
     int postCode;
     
-
+    light_bulb = on ? 1 : 0;
     if (on) {
         postCode = http.POST("{\"command\":\"ON\"}");
     } else {

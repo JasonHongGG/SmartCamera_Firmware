@@ -2,7 +2,7 @@
 #include <WiFi.h>
 
 class WiFiManager {
-private:
+public:
     // ===========================
     // Enter your WiFi credentials
     // ===========================
