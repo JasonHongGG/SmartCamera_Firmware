@@ -7,11 +7,11 @@
 class ArduinoServerManager {
 public:
     CloudSwitch lightSwitch;
-    const char DEVICE_KEY[] = "xYv9#1xW13lrSMjrrVVjIl90K";
-    const char DEVICE_LOGIN_NAME[] = "4e2a1e1b-e0c8-40b3-a902-53f1dae42818";
+    static constexpr const char* DEVICE_KEY = "xYv9#1xW13lrSMjrrVVjIl90K";
+    static constexpr const char* DEVICE_LOGIN_NAME = "4e2a1e1b-e0c8-40b3-a902-53f1dae42818";
 public:
 
-    ArduinoServer() {
+    ArduinoServerManager() {
         WiFiConnectionHandler ArduinoIoTPreferredConnection(WiFiMgr->ssid, WiFiMgr->password);
         initProperties();
         ArduinoCloud.begin(ArduinoIoTPreferredConnection);
@@ -22,11 +22,18 @@ public:
 
         ArduinoCloud.setBoardId(DEVICE_LOGIN_NAME);
         ArduinoCloud.setSecretDeviceKey(DEVICE_KEY);
-        ArduinoCloud.addProperty(lightSwitch, READWRITE, ON_CHANGE, onLightSwitchChange);
+        ArduinoCloud.addProperty(lightSwitch, READWRITE, ON_CHANGE, onLightSwitchChangeStatic);
     }
 
     void update(){
         ArduinoCloud.update();
+    }
+    
+    static void onLightSwitchChangeStatic()
+    {
+        if (ArduinoServerMgr != nullptr) {
+            ArduinoServerMgr->onLightSwitchChange();
+        }
     }
     
     void onLightSwitchChange()
