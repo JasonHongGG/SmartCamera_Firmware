@@ -97,6 +97,8 @@ esp_err_t CmdHandler::handler(httpd_req_t *req) {
     // 不是 camera_open、light_bulb 且 s != NULL，則更新相機參數
     else if (!strcmp(variable, "framesize")) {
         if (s != NULL && s->pixformat == PIXFORMAT_JPEG) {
+            printf("Framesize change request: %d\n", val);
+
             // 檢查是否設置了過大的 framesize，可能導致 DMA overflow
             if (val > 11) { // SXGA (11) 是大多數 ESP32-CAM 的安全上限
                 if (!psramFound()) {
@@ -104,11 +106,16 @@ esp_err_t CmdHandler::handler(httpd_req_t *req) {
                     val = 10; // 降級到 XGA
                 }
             }
+
             res = s->set_framesize(s, (framesize_t)val);
             if (res != 0) {
                 printf("Framesize setting failed, possible DMA overflow. Trying smaller size.\n");
                 // 如果失敗，嘗試更小的尺寸
                 res = s->set_framesize(s, FRAMESIZE_XGA);
+            } else {
+                // 成功變更解析度後，要求目前串流連線結束，讓客戶端重連
+                printf("Framesize successfully set to %d, requesting stream restart...\n", val);
+                CameraMgr->stopStreamRequested = true;
             }
         }
     } else if (!strcmp(variable, "quality")) {

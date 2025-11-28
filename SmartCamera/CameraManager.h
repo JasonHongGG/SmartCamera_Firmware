@@ -6,6 +6,8 @@
 class CameraManager {
 public:
     bool camera_open = true;
+    // 當解析度或其他關鍵設定變更時，用來通知串流 handler 儘快結束目前連線
+    volatile bool stopStreamRequested = false;
 
 public:
     CameraManager();

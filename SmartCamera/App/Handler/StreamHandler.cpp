@@ -52,6 +52,14 @@ esp_err_t StreamHandler::handler(httpd_req_t *req) {
     FlashLightManager::openFlashLight(true);
 
     while (true) {
+        // 若有設定變更（例如解析度），要求結束目前串流
+        if (CameraMgr->stopStreamRequested) {
+            log_i("Stop stream requested (e.g. framesize change), breaking stream loop");
+            CameraMgr->stopStreamRequested = false;
+            res = ESP_OK; // 正常結束，讓客戶端自動重連
+            break;
+        }
+
         // 檢查相機是否仍然可用
         if (!CameraMgr->isInitialized()) {
             log_i("Camera not initialized, stopping stream");
